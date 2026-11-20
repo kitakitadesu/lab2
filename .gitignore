@@ -1,0 +1,10 @@
+# TA reference repo (has its own git history + 250 MB Waijung installer)
+FRA271_LAB2_ACTUATOR_FRAB12/
+# Simulink build cache / autosave / export backups
+slprj/
+*.slxc
+*.asv
+*.autosave
+*.r2025b
+.DS_Store
+~$*.docx
