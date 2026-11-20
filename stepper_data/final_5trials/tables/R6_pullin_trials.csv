@@ -1,0 +1,11 @@
+Drive_Mode,Mode,Microstep_M,Trial,PullIn_Hz,PullIn_Speed_RPM,Stalled_Any,First_Stall_Hz,Max_Tested_Hz,Source_File
+1,Full (1),1,1,400,120,1,600,2400,R6_pullin_M1_Full_T1.mat
+1,Full (1),1,2,600,180,1,800,2400,R6_pullin_M1_Full_T2.mat
+1,Full (1),1,3,400,120,1,600,2400,R6_pullin_M1_Full_T3.mat
+1,Full (1),1,4,400,120,1,600,2400,R6_pullin_M1_Full_T4.mat
+1,Full (1),1,5,600,180,1,800,2400,R6_pullin_M1_Full_T5.mat
+2,Half (1/2),2,1,1000,150,1,1200,2400,R6_pullin_M2_Half_T1.mat
+2,Half (1/2),2,2,1200,180,1,1400,2400,R6_pullin_M2_Half_T2.mat
+2,Half (1/2),2,3,1200,180,1,1400,2400,R6_pullin_M2_Half_T3.mat
+2,Half (1/2),2,4,800,120,1,1000,2400,R6_pullin_M2_Half_T4.mat
+2,Half (1/2),2,5,800,120,1,1000,2400,R6_pullin_M2_Half_T5.mat
