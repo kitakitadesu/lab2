@@ -1,5 +1,6 @@
 function verify_stepper_suite(out_root)
-if nargin < 1, out_root = '/tmp/mlwork/step_auto/out'; end
+repo = fileparts(fileparts(mfilename('fullpath')));
+if nargin < 1, out_root = repo; end
 bdclose('all');
 models = {
   fullfile(out_root, 'MotorXploer_Stepper.slx'), ...
@@ -41,7 +42,7 @@ for i = 1:numel(models)
 end
 
 fprintf('\n=== PART 2: Functional Harness Simulation Checks (Exp Modes 0..5) ===\n');
-hd = '/tmp/mlwork/step_auto/harness';
+hd = fullfile(tempdir, 'stepper_harness');
 if ~isfolder(hd), mkdir(hd); end
 hfile = fullfile(hd, 'step_h.slx');
 copyfile(models{1}, hfile);
@@ -135,11 +136,11 @@ assert(ok5);
 close_system(h, 0);
 
 fprintf('\n=== PART 3: analyze_stepper_labs.m End-to-End Synthetic Dataset Test ===\n');
-syn_dir = '/tmp/mlwork/step_auto/syn_data';
+syn_dir = fullfile(tempdir, 'stepper_syn_data');
 if isfolder(syn_dir), rmdir(syn_dir, 's'); end
 mkdir(syn_dir);
 make_synthetic_dataset(syn_dir);
-addpath('/Users/bocchichan/Documents/lab2');
+addpath(repo);
 S = analyze_stepper_labs(syn_dir);
 ok_r0 = S.calibration.from_r0 && abs(S.calibration.adc_i_zero - 2140.0) < 0.1;
 ok_r6 = abs(S.R6.pullin_mean_hz - 800) < 1e-3;
@@ -234,7 +235,7 @@ for ia = 1:numel(acc_list)
 end
 end
 
-function save_run(d, fname, meta, t, f_cmd, f_targ, ms, stdy, sid, rt, rm, ls, pa1, pa0) %#ok<INUSL>
+function save_run(d, fname, meta, t, f_cmd, f_targ, ms, stdy, sid, rt, rm, ls, pa1, pa0)
 ds = Simulink.SimulationData.Dataset;
 ds = add_sig(ds, 'freq_cmd', f_cmd, t);
 ds = add_sig(ds, 'target_freq', f_targ, t);
@@ -248,7 +249,7 @@ ds = add_sig(ds, 'Motor Angular Velocity', rm * 2 * pi / 60, t);
 ds = add_sig(ds, 'Stepper Frequency (echo)', f_cmd, t);
 ds = add_sig(ds, 'Current (PA1)', pa1, t);
 ds = add_sig(ds, 'Load Cell (PA0)', pa0, t);
-logsout = ds; %#ok<NASGU>
+logsout = ds;
 save(fullfile(d, fname), 'logsout', 'meta');
 end
 

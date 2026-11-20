@@ -259,10 +259,18 @@ if ~isempty(r8_runs)
             bad = m & (rt_win > 40) & (rm_win < 0.70 * rt_win);
             idx = find(bad, 1, 'first');
             if ~isempty(idx)
-                f_crit(tr) = D.freq_cmd(idx);
+                % The causal window fires ~30 ms after the drop; walk back to the onset
+                % (last contiguous samples below 90 % of theory, 20 ms smoothing).
+                % f_echo, not freq_cmd: it arrives in the same Rx frame as the encoder speed.
+                rm_s = movmean(D.rpm_meas, max(1, round(0.02 / max(dt_med, 1e-4))));
+                j = idx;
+                while j > 1 && m(j-1) && rm_s(j-1) < 0.9 * D.rpm_theory(j-1)
+                    j = j - 1;
+                end
+                f_crit(tr) = D.f_echo(j);
                 if isempty(sample_r8), sample_r8 = sub{tr}; end
             else
-                f_crit(tr) = max(D.freq_cmd(m));
+                f_crit(tr) = max(D.f_echo(m));
             end
         end
         spr = sub{1}.meta.steps_per_rev;

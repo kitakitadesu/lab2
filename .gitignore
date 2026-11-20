@@ -8,3 +8,4 @@ slprj/
 *.r2025b
 .DS_Store
 ~$*.docx
+__pycache__/

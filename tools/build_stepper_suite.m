@@ -7,10 +7,14 @@ function build_stepper_suite(out_root)
 %   - <out_root>/stepper_motor/R6_LossStep_PullIn.slx
 %   - <out_root>/stepper_motor/R8_Accel_PullOut.slx
 %   - <out_root>/stepper_motor/R14_Control_PerMode.slx
-if nargin < 1, out_root = '/tmp/mlwork/step_auto/out'; end
+repo = fileparts(fileparts(mfilename('fullpath')));
+if nargin < 1, out_root = repo; end
 bdclose('all');
-ref_slx = '/tmp/mlwork/ref.slx';
-work_dir = '/tmp/mlwork/step_auto/work';
+% Base model = TA reference MotorXploer.slx (clone the TA repo into the repo root, it is git-ignored)
+ref_slx = fullfile(repo, 'FRA271_LAB2_ACTUATOR_FRAB12', 'DC Motor and Stepper', 'MotorXploer.slx');
+assert(isfile(ref_slx), ['Missing %s\nClone https://github.com/MINIFI2548/FRA271_LAB2_ACTUATOR_FRAB12 ' ...
+    'into the repo root first.'], ref_slx);
+work_dir = fullfile(tempdir, 'stepper_build');
 sub_dir  = fullfile(out_root, 'stepper_motor');
 if ~isfolder(work_dir), mkdir(work_dir); end
 if ~isfolder(out_root), mkdir(out_root); end
@@ -35,13 +39,12 @@ end
 function build_one(ref_slx, work_dir, sp, do_png)
 bdclose('all');
 load_system(ref_slx);
+[~, ref_name] = fileparts(ref_slx);
 m = ['bld_' sp.name];
-save_system('ref', fullfile(work_dir, [m '.slx']));
+save_system(ref_name, fullfile(work_dir, [m '.slx']));
 
-% ---- 0. Set serial port to connected ST-Link VCP (/dev/cu.usbmodem213403)
-for blk = {'Host Serial Setup', 'Host Serial Rx1', 'Host Serial Tx'}
-  set_param([m '/' blk{1}], 'port', '/dev/cu.usbmodem213403');
-end
+% Serial port stays as in the TA reference; run_stepper_labs / start_stepper_labs set the
+% user's port at run time (Waijung rejects a port that is not present when the model is built).
 
 % ---- 1. Rewire TA Output stepper inputs: replace old constants with From tags so wires never cross the Slider
 ta_swap = {'Stepper Frequency','Data Type Conversion8','f_cmd',false; ...
@@ -255,7 +258,7 @@ out_slx = fullfile(sp.dir, [sp.name '.slx']);
 Simulink.exportToVersion(m, out_slx, 'R2025b');
 if do_png
   try
-    print(['-s' m], '-dpng', '-r110', '/tmp/mlwork/step_auto/master_layout.png');
+    print(['-s' m], '-dpng', '-r110', fullfile(work_dir, 'master_layout.png'));
   catch e
     fprintf('PRINT ERR %s\n', e.message);
   end

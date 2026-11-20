@@ -26,6 +26,16 @@ Board: NUCLEO-G474RE + DRV8825 + AMT103-V encoder, MotorXplorer firmware (`motor
 | `Report+Format.docx` | Course template |
 | `Lab2_2_Stepper_Motor_Report_Draft.docx` | Thai draft built from the template |
 
+`tools/` (all paths repo-relative; scratch work goes to `tempdir`):
+
+| Script | Purpose |
+|---|---|
+| `build_stepper_suite.m` | Regenerates the 7 `.slx` from the TA `MotorXploer.slx` (needs the TA repo cloned into the repo root). `build_stepper_suite()` overwrites the repo models; pass a folder to build elsewhere |
+| `verify_stepper_suite.m` | Compile checks on all 7 models + harness sims (serial blocks commented out) T0a–T5 + synthetic-data test of the analyzer T6. `verify_stepper_suite(folder)` |
+| `make_report_figures.m` | 300-dpi report figures (raw vs LPF, FFT, loss-step time series, Full vs Half pull-out) into `stepper_data/report_final` |
+| `build_report_draft.py` | Builds the Thai draft `.docx` from `Report+Format.docx` (Python 3, stdlib only) |
+| `progress_dashboard.ts` | Live progress page: `bun tools/progress_dashboard.ts stepper_data/<run> [matlab.log] [port]` → `http://127.0.0.1:8765` (reads `queue.json`, a run counts as done when its `.mat` exists) |
+
 Model internals: clock-driven MATLAB Function `Experiment Scheduler` → TA Output area via Goto/From; `Stepper Kinematics & Loss Step` computes `rpm_theory`, `rpm_meas` (raw), `rpm_meas_lpf` (2nd-order 10 Hz Butterworth, Ts = 1 ms), `lost_steps` (integrators reset while `EN = 1`). `StopFcn` sends `Stepper Freq = 0, EN = 1` on stop.
 
 ## Setup on a new machine
@@ -79,7 +89,7 @@ Before powering: `5V_SEL = E5V`, step-down outputs 3.3 V, DRV8825 current limit 
 1. Reconnect the board, run the 86-run 5-trial collection above, commit + push `stepper_data/final_5trials`.
 2. Analyzer updates before analysing the 5-trial data:
    - Group R6/R8 by drive mode (current code assumes one mode per folder; mixed Full+Half would be averaged together).
-   - R8 pull-out: report `f_echo` (board-time-aligned with the encoder) at stall onset, and backtrack from the causal 80 ms detection to the onset to remove the detection-lag bias (≈ accel × 30 ms).
+   - ~~R8 pull-out bias~~ done: reports `f_echo` at the stall onset (backtracked from the causal 80 ms detection), verified by `tools/verify_stepper_suite` T6.
    - R6 stall criterion: use speed (< 85 % theory) and end-of-step lost steps ≥ 4; the current peak-lost-steps > 5 rule flags transient start-up lag as a stall (seen at Half 1000 Hz with speed exactly on theory).
    - Raw figures for R6/R8 per mode; LPF columns in R3 summary; per-trial long CSVs for R4_R5 and R8.
 3. Write the final report from the 5-trial CSVs/figures into a new `Lab2_2_Stepper_Motor_Report.docx` (keep the draft). Hypothesis 2 (lower accel → higher pull-out) is only partially supported by the data so far — discuss as such.
@@ -89,4 +99,6 @@ Before powering: `5V_SEL = E5V`, step-down outputs 3.3 V, DRV8825 current limit 
 - 200 full steps/rev (1.8°) assumed — check the motor datasheet (`'StepsPerRev'` option).
 - `.slx` files are R2025b exports, tested only in R2026a.
 - Current gain 66.3185 counts/A is borrowed from the DC-motor board calibration.
-- Model generator and verifier are copied to `tools/` (`build_stepper_suite.m`, `verify_stepper_suite.m`). They still use hard-coded `/tmp/mlwork` paths; `ref.slx` there is a byte-identical copy of the TA `FRA271_LAB2_ACTUATOR_FRAB12/DC Motor and Stepper/MotorXploer.slx`. The live dashboards (`/tmp/*progress_server.ts`) are not in the repo.
+- `tools/build_report_draft.py` regenerates the **draft** report (placeholders); its appendix text still describes the older per-area model, not the current scheduler-based models.
+- `tools/make_report_figures.m` is tied to the 3-trial/LPF folders and their pull-out numbers; adapt it for the 5-trial data.
+- The saved models carry the previous user's macOS port; regenerated models keep the TA reference port (`COM9`). Always pass `'Port'`.
